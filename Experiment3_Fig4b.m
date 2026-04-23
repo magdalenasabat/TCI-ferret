@@ -15,7 +15,8 @@ clc; close all; clear all;
 addpath(genpath(strcat(['code' filesep 'myFunctions'])));
 addpath(genpath(strcat(['code' filesep 'toolbox-sam-tci'])));
 
-dataFolder = strcat([ 'data' filesep 'experiment3']);
+dataFolder = strcat([ 'data' filesep 'experiment3' filesep 'fig4']);
+figFolder = strcat([ 'figs' ]);
 
 subnames={'A','B'};
 sessions = {[31:40], ...
@@ -26,13 +27,13 @@ markerstyles = {'^','square'};
 
 rates = {'normal','compressed','stretched'};
 categories = {'ferrets','speech'};
-context={'random-random', 'random-natural'};
 
-%% The effect of rate & category ->  y ∼1 + rate + category + (1 | unit) + (1 | session)
+
+%% 
 
 xi=1;
-all_CCC = zeros(696,5,500,length(rates),length(categories));
-all_NC = zeros(696,5,500,length(rates),length(categories));
+all_CCC = zeros(696,5,500,length(rates));
+all_NC = zeros(696,5,500,length(rates));
 
 for subid= 1:length(subnames) 
     
@@ -46,22 +47,22 @@ for subid= 1:length(subnames)
 
         %load files
         load(strcat([ dataFolder filesep 'sub-' subjid filesep 'sess-' sprintf('%03d',sessN) '_anatomical.mat'  ]));
-        load(strcat([ dataFolder filesep 'sub-' subjid filesep 'sess-' sprintf('%03d',sessN) '_model_fits.mat'  ]));
+      
         load(strcat([ dataFolder filesep 'sub-' subjid filesep 'sess-' sprintf('%03d',sessN) '_cross_context_correlation.mat'  ]));
  
-        units_n = length(M{1}.best_intper_sec);
+        units_n = length(L{1}.chnames);
         
-        % pickup model fits and distance
+        % pickup CCC
         for r=1:length(rates)
-            for c=1:length(categories)
-                n_seg= sum(L_context{r,c}.n_total_segs~=0);
-               
-                
-                all_CCC(:,1:n_seg,xi:xi+units_n-1,r,c)=L{r,c}.diff_context(:,1:n_seg,:);
-                all_NC(:,1:n_seg,xi:xi+units_n-1,r,c)=L{r,c}.same_context(:,1:n_seg,:);
-        
+
+            n_seg= sum(L{r}.n_total_segs~=0);
+
+
+            all_CCC(:,1:n_seg,xi:xi+units_n-1,r)=L{r}.diff_context(:,1:n_seg,:);
+            all_NC(:,1:n_seg,xi:xi+units_n-1,r)=L{r}.same_context(:,1:n_seg,:);
+
              
-            end
+         
         end
         xi=xi+units_n;
     end
@@ -73,7 +74,7 @@ all_NC = all_NC(:,:,1:xi-1,:,:);
 
 %% Fig 4a
 
-addpath(genpath(strcat([sourceFolder filesep 'analysis' filesep 'code' filesep 'toolbox-ScientificColourMaps8'])));
+addpath(genpath(strcat([ 'code' filesep 'toolbox-ScientificColourMaps8'])));
 load('roma.mat');
 hist_col = roma([70,10,230],:);
 valid_durs = [1:5];
@@ -143,5 +144,5 @@ for i= 1:axgrid(2)
     end
 
 end
-
+title('In the paper figure bins were set to 10ms, here 5ms')
 set(findall(figTCI,'-property','FontSize'),'FontSize',7)
